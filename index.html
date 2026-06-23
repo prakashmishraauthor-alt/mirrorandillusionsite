@@ -14,6 +14,7 @@
     body {
       background: #000;
       overflow: hidden;
+      font-family: Arial, sans-serif;
     }
     
     #canvas {
@@ -22,27 +23,42 @@
       display: block;
     }
     
-   .bg {
+  .bg {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: url('museum-bg1.png') no-repeat center center;
+      background: url('./museum-bg1.png') no-repeat center center;
       background-size: cover;
       z-index: -1;
     }
     
-   .loading {
+    /* Fallback if image fails */
+  .bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #000 100%);
+      z-index: -1;
+    }
+    
+  .loading {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       color: #FFD700;
-      font-family: Georgia, serif;
-      font-size: 24px;
+      font-size: 20px;
       z-index: 100;
       text-shadow: 0 0 20px #FFD700;
+      text-align: center;
+    }
+    
+  .error {
+      color: #ff4444;
+      margin-top: 20px;
+      font-size: 14px;
     }
   </style>
   
@@ -57,12 +73,27 @@
 </head>
 <body>
   <div class="bg"></div>
-  <div class="loading" id="loading">Summoning Wizard...</div>
+  <div class="loading" id="loading">
+    Summoning Wizard...<br>
+    <div class="error" id="error"></div>
+  </div>
   <canvas id="canvas"></canvas>
 
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    
+    const errorDiv = document.getElementById('error');
+    const loadingDiv = document.getElementById('loading');
+    
+    // Check if background image loads
+    const bgImg = new Image();
+    bgImg.onload = () => console.log('Background loaded: museum-bg1.png');
+    bgImg.onerror = () => {
+      errorDiv.innerHTML += 'ERROR: museum-bg1.png not found<br>';
+      console.error('museum-bg1.png not found in same folder');
+    };
+    bgImg.src = './museum-bg1.png';
     
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -76,7 +107,6 @@
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     
     // LIGHTING
     const ambientLight = new THREE.AmbientLight(0x3a4a6a, 0.8);
@@ -101,7 +131,7 @@
     scene.add(wizardLight);
     scene.add(wizardLight.target);
     
-    // GROUND FOR SHADOWS
+    // GROUND
     const groundGeo = new THREE.PlaneGeometry(20, 20);
     const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 });
     const ground = new THREE.Mesh(groundGeo, groundMat);
@@ -109,3 +139,120 @@
     ground.position.y = 0;
     ground.receiveShadow = true;
     scene.add(ground);
+    
+    // LOAD WIZARD
+    const loader = new GLTFLoader();
+    let wizard, mixer;
+    const clock = new THREE.Clock();
+    
+    loader.load(
+      './wizard.glb', // Note the./ for relative path
+      (gltf) => {
+        console.log('Wizard loaded successfully');
+        wizard = gltf.scene;
+        wizard.scale.set(1.2, 1.2, 1.2);
+        wizard.position.set(-6, 0, 0);
+        wizard.rotation.y = Math.PI / 2;
+        
+        wizard.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+        
+        scene.add(wizard);
+        loadingDiv.style.display = 'none';
+        
+        if (gltf.animations && gltf.animations.length > 0) {
+          mixer = new THREE.AnimationMixer(wizard);
+          const walkClip = gltf.animations.find(a => a.name.toLowerCase().includes('walk')) || gltf.animations[0];
+          const walkAction = mixer.clipAction(walkClip);
+          walkAction.play();
+        }
+        
+        startWalk();
+      },
+      (xhr) => {
+        const percent = (xhr.loaded / xhr.total * 100).toFixed(0);
+        loadingDiv.firstChild.textContent = `Summoning Wizard... ${percent}%`;
+      },
+      (error) => {
+        console.error('Error loading wizard.glb:', error);
+        errorDiv.innerHTML += 'ERROR: wizard.glb not found or failed to load<br>Check: 1) File is named exactly wizard.glb<br>2) It is in same folder as HTML<br>3) You are running from a local server, not file://';
+      }
+    );
+    
+    function startWalk() {
+      const startX = -6;
+      const endX = 0;
+      const duration = 6000;
+      const startTime = Date.now();
+      
+      function updateWalk() {
+        if (!wizard) return;
+        
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        wizard.position.x = startX + (endX - startX) * eased;
+        wizardLight.target.position.copy(wizard.position);
+        
+        if (progress < 1) {
+          requestAnimationFrame(updateWalk);
+        } else {
+          wizard.rotation.y = 0;
+        }
+      }
+      
+      updateWalk();
+    }
+    
+    // PARTICLES
+    const particleGeo = new THREE.BufferGeometry();
+    const particleCount = 100;
+    const positions = new Float32Array(particleCount * 3);
+    
+    for (let i = 0; i < particleCount * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 20;
+    }
+    
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particleMat = new THREE.PointsMaterial({
+      color: 0xFFD700,
+      size: 0.05,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending
+    });
+    
+    const particles = new THREE.Points(particleGeo, particleMat);
+    scene.add(particles);
+    
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const delta = clock.getDelta();
+      if (mixer) mixer.update(delta);
+      
+      particles.rotation.y += delta * 0.1;
+      particles.rotation.x += delta * 0.05;
+      
+      const time = Date.now() * 0.001;
+      leftLight.intensity = 1.5 + Math.sin(time * 2) * 0.3;
+      rightLight.intensity = 1.5 + Math.sin(time * 2 + 1) * 0.3;
+      topLight.intensity = 2 + Math.sin(time * 1.5) * 0.5;
+      
+      renderer.render(scene, camera);
+    }
+    
+    animate();
+    
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
