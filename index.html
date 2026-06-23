@@ -145,26 +145,109 @@
         }
     }
 
-    .hero-title {
-        font-size: clamp(2.5rem, 10vw, 8rem);
-        background: linear-gradient(135deg, #d4af37 0%, #f9e076 25%, #d4af37 50%, #b8860b 75%, #d4af37 100%);
-        background-size: 200% 200%;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 0 0 40px rgba(212, 175, 55, 0.5), 0 0 80px rgba(212, 175, 55, 0.3);
-        animation: shimmer 3s ease-in-out infinite;
-        letter-spacing: 0.05em;
-        line-height: 1.1;
-        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8));
-        margin-bottom: 2rem;
-    }
+   .hero-title{
+    font-family:'Cinzel Decorative',serif;
 
-    @keyframes shimmer {
-        0%, 100% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-    }
+    font-size:clamp(3rem,10vw,8rem);
 
+    line-height:1.05;
+
+    letter-spacing:.06em;
+
+    font-weight:700;
+
+    position:relative;
+
+    background:linear-gradient(
+        180deg,
+        #fff6d8 0%,
+        #ffe89a 8%,
+        #ffd34d 18%,
+        #f8c83a 38%,
+        #d4af37 58%,
+        #b8860b 80%,
+        #7c5600 100%
+    );
+
+    background-size:100% 100%;
+
+    -webkit-background-clip:text;
+    background-clip:text;
+
+    -webkit-text-fill-color:transparent;
+
+    color:transparent;
+
+    filter:
+        drop-shadow(0 2px 2px rgba(255,255,255,.55))
+        drop-shadow(0 0 12px rgba(255,225,110,.95))
+        drop-shadow(0 0 28px rgba(255,195,40,.95))
+        drop-shadow(0 0 60px rgba(255,170,0,.75))
+        drop-shadow(0 0 120px rgba(255,150,0,.55));
+
+    text-shadow:
+        0 0 2px rgba(255,255,255,.95),
+        0 0 6px rgba(255,245,180,.95),
+        0 0 18px rgba(255,220,90,.95),
+        0 0 36px rgba(255,190,50,.85),
+        0 0 70px rgba(255,170,20,.70),
+        0 0 140px rgba(255,150,0,.45),
+        0 10px 12px rgba(0,0,0,.95);
+
+    animation:goldGlow 4s ease-in-out infinite;
+}
+   @keyframes goldGlow{
+
+0%,100%{
+
+filter:
+drop-shadow(0 2px 2px rgba(255,255,255,.6))
+drop-shadow(0 0 12px rgba(255,225,110,.95))
+drop-shadow(0 0 28px rgba(255,195,40,.95))
+drop-shadow(0 0 60px rgba(255,170,0,.8))
+drop-shadow(0 0 120px rgba(255,150,0,.55));
+
+}
+
+50%{
+
+filter:
+drop-shadow(0 2px 2px rgba(255,255,255,.8))
+drop-shadow(0 0 20px rgba(255,240,140,1))
+drop-shadow(0 0 45px rgba(255,210,70,1))
+drop-shadow(0 0 90px rgba(255,180,0,.95))
+drop-shadow(0 0 180px rgba(255,160,0,.65));
+
+}
+
+}
+   .hero-title::before{
+
+content:"";
+
+position:absolute;
+
+left:50%;
+top:50%;
+
+width:140%;
+
+height:170%;
+
+transform:translate(-50%,-50%);
+
+background:radial-gradient(circle,
+rgba(255,180,40,.28) 0%,
+rgba(255,160,20,.12) 45%,
+transparent 75%);
+
+filter:blur(70px);
+
+z-index:-1;
+
+pointer-events:none;
+
+}
     .hero-subtitle {
         color: #c9a96a;
         font-size: clamp(1rem, 2.5vw, 1.5rem);
@@ -240,6 +323,23 @@
     .treasure-button:active {
         transform: translateY(-2px) scale(1.02);
     }
+   .hero-subtitle{
+
+color:#d8b15b;
+
+letter-spacing:.35em;
+
+text-shadow:
+
+0 0 5px rgba(255,230,120,.8),
+
+0 0 15px rgba(255,190,60,.7),
+
+0 0 35px rgba(255,160,20,.45),
+
+0 2px 6px rgba(0,0,0,.95);
+
+}
 
     /* Mobile Optimizations */
     @media (max-width: 390px) {
