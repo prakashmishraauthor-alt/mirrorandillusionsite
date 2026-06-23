@@ -1,502 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mirror and Illusion - Find the Treasure</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;500;600;700&family=Uncial+Antiqua&display=swap" rel="stylesheet">
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Museum Hall - 3D Wizard</title>
+  <style>
     * {
-        scroll-behavior: smooth;
-        box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
     
     body {
-        font-family: 'Cinzel', serif;
-        background: #0a0806;
-        overflow-x: hidden;
-        margin: 0;
-        padding: 0;
+      background: #000;
+      overflow: hidden;
     }
-
-    .ornate-font {
-        font-family: 'Cinzel Decorative', cursive;
+    
+    #canvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
     }
-
-    .medieval-font {
-        font-family: 'Uncial Antiqua', cursive;
+    
+   .bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('museum-bg1.png') no-repeat center center;
+      background-size: cover;
+      z-index: -1;
     }
-
-    /* Hero Section */
-    .hero {
-        position: relative;
-        height: 100vh;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        background: linear-gradient(180deg, #0a0806 0%, #1a1410 50%, #0a0806 100%);
+    
+   .loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #FFD700;
+      font-family: Georgia, serif;
+      font-size: 24px;
+      z-index: 100;
+      text-shadow: 0 0 20px #FFD700;
     }
-
-    .parallax-bg {
-        position: absolute;
-        top: -10%;
-        left: -10%;
-        width: 120%;
-        height: 120%;
-        background-image: 
-            radial-gradient(circle at 20% 50%, rgba(139, 69, 19, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(101, 67, 33, 0.1) 0%, transparent 50%),
-            repeating-linear-gradient(90deg, transparent, transparent 100px, rgba(60, 40, 20, 0.03) 100px, rgba(60, 40, 20, 0.03) 101px),
-            repeating-linear-gradient(0deg, transparent, transparent 100px, rgba(60, 40, 20, 0.03) 100px, rgba(60, 40, 20, 0.03) 101px),
-            linear-gradient(180deg, #1a1410 0%, #0f0b08 100%);
-        background-size: 100% 100%, 100% 100%, 100px 100px, 100px 100px, 100% 100%;
-        will-change: transform;
-        z-index: 1;
+  </style>
+  
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
     }
-
-    .castle-stones {
-        position: absolute;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23241b13' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        opacity: 0.5;
-        z-index: 2;
-        pointer-events: none;
-    }
-
-    .torch {
-        position: absolute;
-        width: 30px;
-        height: 80px;
-        z-index: 3;
-    }
-
-    .torch-left {
-        left: 5%;
-        top: 30%;
-    }
-
-    .torch-right {
-        right: 5%;
-        top: 30%;
-    }
-
-    .torch-flame {
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 20px;
-        height: 35px;
-        background: radial-gradient(ellipse at center, rgba(255, 200, 0, 0.9) 0%, rgba(255, 140, 0, 0.8) 40%, rgba(255, 69, 0, 0.4) 70%, transparent 100%);
-        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-        animation: flicker 0.15s infinite alternate;
-        filter: blur(1px);
-        box-shadow: 0 0 30px rgba(255, 140, 0, 0.8), 0 0 60px rgba(255, 100, 0, 0.4);
-    }
-
-    @keyframes flicker {
-        0% { transform: translateX(-50%) scale(1) rotate(-2deg); opacity: 0.9; }
-        100% { transform: translateX(-50%) scale(1.1) rotate(2deg); opacity: 1; }
-    }
-
-    .torch-stick {
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 6px;
-        height: 50px;
-        background: linear-gradient(90deg, #2b1810 0%, #4a2f1d 50%, #2b1810 100%);
-        border-radius: 2px;
-    }
-
-    #particleCanvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 4;
-        pointer-events: none;
-    }
-
-    .hero-content {
-        position: relative;
-        z-index: 10;
-        text-align: center;
-        padding: 2rem;
-        animation: fadeInUp 1.5s ease-out;
-    }
-
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(40px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-   .hero-title{
-    font-family:'Cinzel Decorative',serif;
-
-    font-size:clamp(3rem,10vw,8rem);
-
-    line-height:1.05;
-
-    letter-spacing:.06em;
-
-    font-weight:700;
-
-    position:relative;
-
-    background:linear-gradient(
-        180deg,
-        #fff6d8 0%,
-        #ffe89a 8%,
-        #ffd34d 18%,
-        #f8c83a 38%,
-        #d4af37 58%,
-        #b8860b 80%,
-        #7c5600 100%
-    );
-
-    background-size:100% 100%;
-
-    -webkit-background-clip:text;
-    background-clip:text;
-
-    -webkit-text-fill-color:transparent;
-
-    color:transparent;
-
-    filter:
-        drop-shadow(0 2px 2px rgba(255,255,255,.55))
-        drop-shadow(0 0 12px rgba(255,225,110,.95))
-        drop-shadow(0 0 28px rgba(255,195,40,.95))
-        drop-shadow(0 0 60px rgba(255,170,0,.75))
-        drop-shadow(0 0 120px rgba(255,150,0,.55));
-
-    text-shadow:
-        0 0 2px rgba(255,255,255,.95),
-        0 0 6px rgba(255,245,180,.95),
-        0 0 18px rgba(255,220,90,.95),
-        0 0 36px rgba(255,190,50,.85),
-        0 0 70px rgba(255,170,20,.70),
-        0 0 140px rgba(255,150,0,.45),
-        0 10px 12px rgba(0,0,0,.95);
-
-    animation:goldGlow 4s ease-in-out infinite;
-}
-   @keyframes goldGlow{
-
-0%,100%{
-
-filter:
-drop-shadow(0 2px 2px rgba(255,255,255,.6))
-drop-shadow(0 0 12px rgba(255,225,110,.95))
-drop-shadow(0 0 28px rgba(255,195,40,.95))
-drop-shadow(0 0 60px rgba(255,170,0,.8))
-drop-shadow(0 0 120px rgba(255,150,0,.55));
-
-}
-
-50%{
-
-filter:
-drop-shadow(0 2px 2px rgba(255,255,255,.8))
-drop-shadow(0 0 20px rgba(255,240,140,1))
-drop-shadow(0 0 45px rgba(255,210,70,1))
-drop-shadow(0 0 90px rgba(255,180,0,.95))
-drop-shadow(0 0 180px rgba(255,160,0,.65));
-
-}
-
-}
-   .hero-title::before{
-
-content:"";
-
-position:absolute;
-
-left:50%;
-top:50%;
-
-width:140%;
-
-height:170%;
-
-transform:translate(-50%,-50%);
-
-background:radial-gradient(circle,
-rgba(255,180,40,.28) 0%,
-rgba(255,160,20,.12) 45%,
-transparent 75%);
-
-filter:blur(70px);
-
-z-index:-1;
-
-pointer-events:none;
-
-}
-    .hero-subtitle {
-        color: #c9a96a;
-        font-size: clamp(1rem, 2.5vw, 1.5rem);
-        margin-top: 1.5rem;
-        margin-bottom: 3rem;
-        letter-spacing: 0.3em;
-        text-transform: uppercase;
-        opacity: 0.9;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.8);
-    }
-
-    .treasure-button {
-        position: relative;
-        display: inline-block;
-        padding: 1.25rem 3.5rem;
-        font-size: clamp(1rem, 2.5vw, 1.3rem);
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.15em;
-        color: #d4af37;
-        background: linear-gradient(135deg, rgba(30, 22, 17, 0.8) 0%, rgba(42, 31, 23, 0.9) 50%, rgba(30, 22, 17, 0.8) 100%);
-        border: 3px solid transparent;
-        border-radius: 8px;
-        cursor: pointer;
-        text-decoration: none;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        box-shadow: 
-            0 10px 30px rgba(0, 0, 0, 0.6),
-            inset 0 1px 0 rgba(212, 175, 55, 0.1);
-        overflow: hidden;
-    }
-
-    .treasure-button::before {
-        content: '';
-        position: absolute;
-        inset: -3px;
-        background: linear-gradient(135deg, #d4af37, #8b6914, #d4af37);
-        border-radius: 8px;
-        z-index: -1;
-        opacity: 0.6;
-        transition: opacity 0.4s ease;
-    }
-
-    .treasure-button::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at center, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
-        border-radius: 8px;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-        pointer-events: none;
-    }
-
-    .treasure-button:hover {
-        transform: translateY(-5px) scale(1.05);
-        color: #f9e076;
-        text-shadow: 0 0 20px rgba(212, 175, 55, 0.8);
-        box-shadow: 
-            0 20px 50px rgba(212, 175, 55, 0.4),
-            0 0 80px rgba(212, 175, 55, 0.3),
-            inset 0 1px 0 rgba(212, 175, 55, 0.3);
-    }
-
-    .treasure-button:hover::before {
-        opacity: 1;
-    }
-
-    .treasure-button:hover::after {
-        opacity: 1;
-    }
-
-    .treasure-button:active {
-        transform: translateY(-2px) scale(1.02);
-    }
-   .hero-subtitle{
-
-color:#d8b15b;
-
-letter-spacing:.35em;
-
-text-shadow:
-
-0 0 5px rgba(255,230,120,.8),
-
-0 0 15px rgba(255,190,60,.7),
-
-0 0 35px rgba(255,160,20,.45),
-
-0 2px 6px rgba(0,0,0,.95);
-
-}
-
-    /* Mobile Optimizations */
-    @media (max-width: 390px) {
-        .torch {
-            width: 20px;
-            height: 60px;
-        }
-
-        .hero-title {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero-subtitle {
-            margin-bottom: 2rem;
-        }
-
-        .treasure-button {
-            padding: 1rem 2.5rem;
-            font-size: 1rem;
-        }
-    }
-
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-        width: 10px;
-    }
-
-    ::-webkit-scrollbar-track {
-        background: #0a0806;
-    }
-
-    ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #d4af37, #8b6914);
-        border-radius: 5px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #f9e076, #d4af37);
-    }
-</style>
+  </script>
 </head>
 <body>
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="parallax-bg" id="parallaxBg"></div>
-        <div class="castle-stones"></div>
-        
-        <div class="torch torch-left">
-            <div class="torch-flame"></div>
-            <div class="torch-stick"></div>
-        </div>
-        <div class="torch torch-right">
-            <div class="torch-flame"></div>
-            <div class="torch-stick"></div>
-        </div>
+  <div class="bg"></div>
+  <div class="loading" id="loading">Summoning Wizard...</div>
+  <canvas id="canvas"></canvas>
 
-        <canvas id="particleCanvas"></canvas>
-
-        <div class="hero-content">
-            <h1 class="hero-title ornate-font">Mirror and Illusion</h1>
-            <p class="hero-subtitle">Ancient Secrets Await</p>
-            <a href="treasure.html" class="treasure-button ornate-font">Find the Treasure</a>
-        </div>
-    </section>
-
-    <script>
-        // Parallax Effect
-        window.addEventListener('scroll', () => {
-            const scrolled = window.pageYOffset;
-            const parallax = document.getElementById('parallaxBg');
-            if (parallax) {
-                parallax.style.transform = `translateY(${scrolled * 0.5}px)`;
-            }
-        });
-
-        // Three.js Particle System for Golden Embers
-        const canvas = document.getElementById('particleCanvas');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-        
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        camera.position.z = 5;
-
-        // Create ember particles
-        const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 250;
-        const posArray = new Float32Array(particlesCount * 3);
-        const velocityArray = new Float32Array(particlesCount * 3);
-
-        for (let i = 0; i < particlesCount * 3; i += 3) {
-            posArray[i] = (Math.random() - 0.5) * 12;
-            posArray[i + 1] = (Math.random() - 0.5) * 12;
-            posArray[i + 2] = (Math.random() - 0.5) * 12;
-            
-            velocityArray[i] = (Math.random() - 0.5) * 0.01;
-            velocityArray[i + 1] = Math.random() * 0.02 + 0.01;
-            velocityArray[i + 2] = (Math.random() - 0.5) * 0.01;
-        }
-
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.06,
-            color: 0xd4af37,
-            transparent: true,
-            opacity: 0.8,
-            blending: THREE.AdditiveBlending,
-            sizeAttenuation: true
-        });
-
-        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particlesMesh);
-
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-
-            const positions = particlesGeometry.attributes.position.array;
-
-            for (let i = 0; i < particlesCount * 3; i += 3) {
-                positions[i] += velocityArray[i];
-                positions[i + 1] += velocityArray[i + 1];
-                positions[i + 2] += velocityArray[i + 2];
-
-                // Add subtle drift
-                positions[i] += Math.sin(Date.now() * 0.001 + i) * 0.0005;
-
-                // Reset particle if it goes too high
-                if (positions[i + 1] > 6) {
-                    positions[i + 1] = -6;
-                    positions[i] = (Math.random() - 0.5) * 12;
-                    positions[i + 2] = (Math.random() - 0.5) * 12;
-                }
-
-                // Pulse opacity
-                const time = Date.now() * 0.001;
-                particlesMaterial.opacity = 0.6 + Math.sin(time + i) * 0.2;
-            }
-
-            particlesGeometry.attributes.position.needsUpdate = true;
-            particlesMesh.rotation.y += 0.0005;
-
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
-<script>(function(){document.addEventListener("click",function(e){var a=e.target.closest("[data-product-id]");if(!a)return;e.preventDefault();var pid=a.getAttribute("data-product-id");if(pid)parent.postMessage({type:"ecto-artifact-link-click",productId:pid},"*")})})();</script>
-</body>
-</html>
+  <script type="module">
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2.5, 7);
+    camera.lookAt(0, 1.5, 0);
+    
+    const renderer = new THREE.WebGLRenderer({
+      canvas: document.getElementById('canvas'),
+      alpha: true,
+      antialias: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // LIGHTING
+    const ambientLight = new THREE.AmbientLight(0x3a4a6a, 0.8);
+    scene.add(ambientLight);
+    
+    const leftLight = new THREE.PointLight(0xFFD700, 1.5, 30);
+    leftLight.position.set(-4, 3, 2);
+    scene.add(leftLight);
+    
+    const rightLight = new THREE.PointLight(0xFFD700, 1.5, 30);
+    rightLight.position.set(4, 3, 2);
+    scene.add(rightLight);
+    
+    const topLight = new THREE.PointLight(0x6a8cff, 2, 40);
+    topLight.position.set(0, 8, 0);
+    scene.add(topLight);
+    
+    const wizardLight = new THREE.SpotLight(0xFFD700, 1.5, 15, Math.PI / 6, 0.5);
+    wizardLight.position.set(0, 5, 3);
+    wizardLight.target.position.set(0, 0, 0);
+    wizardLight.castShadow = true;
+    scene.add(wizardLight);
+    scene.add(wizardLight.target);
+    
+    // GROUND FOR SHADOWS
+    const groundGeo = new THREE.PlaneGeometry(20, 20);
+    const groundMat = new THREE.ShadowMaterial({ opacity: 0.3 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = 0;
+    ground.receiveShadow = true;
+    scene.add(ground);
